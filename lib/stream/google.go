@@ -33,3 +33,27 @@ func PublishToTopic(m interface{}, topic *pubsub.Topic) (*string, error) {
 
 	return &result, nil
 }
+
+//GetDefaultSubscriptionConfig TODO fill in better defaults - make duration deployment dependant
+func GetDefaultSubscriptionConfig(topic *pubsub.Topic, retentionDuration time.Duration) pubsub.SubscriptionConfig {
+
+	return pubsub.SubscriptionConfig{
+		Topic:                         topic,
+		PushConfig:                    pubsub.PushConfig{},
+		BigQueryConfig:                pubsub.BigQueryConfig{},
+		CloudStorageConfig:            pubsub.CloudStorageConfig{},
+		AckDeadline:                   0,
+		RetainAckedMessages:           false,
+		RetentionDuration:             retentionDuration,
+		ExpirationPolicy:              nil,
+		Labels:                        nil,
+		EnableMessageOrdering:         false,
+		DeadLetterPolicy:              nil,
+		Filter:                        "",
+		RetryPolicy:                   nil,
+		Detached:                      false,
+		TopicMessageRetentionDuration: 0,
+		EnableExactlyOnceDelivery:     false,
+		State:                         0,
+	}
+}
