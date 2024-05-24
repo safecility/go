@@ -6,11 +6,9 @@ require (
 	cloud.google.com/go/pubsub v1.38.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/rs/zerolog v1.33.0
-	github.com/safecility/go/lib v0.0.1
+	github.com/safecility/go/lib v0.0.0-20240524135436-0d90fc63b793
 	google.golang.org/grpc v1.64.0
 )
-
-replace github.com/safecility/go/lib v0.0.1 => ./../lib
 
 require (
 	cloud.google.com/go v0.112.2 // indirect
