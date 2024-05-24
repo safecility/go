@@ -275,7 +275,7 @@ func (pp *PahoProxy) listenToGoogle() {
 
 	err := pp.downlinks.Receive(context.Background(), func(ctx context.Context, msg *pubsub.Message) {
 
-		var byteMessage lib.SimpleMessage
+		var byteMessage stream.SimpleMessage
 
 		if err := json.Unmarshal(msg.Data, &byteMessage); err != nil {
 			log.Err(fmt.Errorf("could not decode message data: %s", msg.Data)).Msg("decode err")
@@ -317,12 +317,12 @@ func (pp *PahoProxy) listenToGoogle() {
 	}
 }
 
-func (pp *PahoProxy) publishUplink(message *messages.SimpleMessage) error {
+func (pp *PahoProxy) publishUplink(message *messages.LoraMessage) error {
 	_, err := stream.PublishToTopic(message, pp.uplinks)
 	return err
 }
 
-func (pp *PahoProxy) publishJoin(message *messages.SimpleMessage) error {
+func (pp *PahoProxy) publishJoin(message *messages.LoraMessage) error {
 	if pp.joins == nil {
 		log.Warn().Msg("no topic for joins")
 	}
@@ -330,7 +330,7 @@ func (pp *PahoProxy) publishJoin(message *messages.SimpleMessage) error {
 	return err
 }
 
-func (pp *PahoProxy) publishDownlinkReceipt(message *messages.SimpleMessage) error {
+func (pp *PahoProxy) publishDownlinkReceipt(message *messages.LoraMessage) error {
 	if pp.downlinkReceipts == nil {
 		log.Warn().Msg("no topic for downlinkReceipts")
 	}

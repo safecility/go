@@ -6,6 +6,7 @@ import (
 	"fmt"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/rs/zerolog/log"
+	"github.com/safecility/go/lib/stream"
 	"github.com/safecility/go/mqtt/messages"
 	"reflect"
 	"sync"
@@ -19,7 +20,7 @@ func TestTtnV3_CreateDownlink(t1 *testing.T) {
 		UidTransformer UidTransformer
 	}
 	type args struct {
-		message        messages.SimpleMessage
+		message        stream.SimpleMessage
 		correlationIDs []string
 	}
 	tests := []struct {
@@ -37,7 +38,7 @@ func TestTtnV3_CreateDownlink(t1 *testing.T) {
 				UidTransformer: nil,
 			},
 			args: args{
-				message: messages.SimpleMessage{
+				message: stream.SimpleMessage{
 					Payload: []byte{0, 2},
 					Time:    time.Time{},
 				},
@@ -202,7 +203,7 @@ func TestTtnV3_TransformPahoDownlinkMessage(t1 *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *messages.SimpleMessage
+		want    *stream.SimpleMessage
 		wantErr bool
 	}{
 		// TODO: Add more/better test cases.
@@ -214,7 +215,7 @@ func TestTtnV3_TransformPahoDownlinkMessage(t1 *testing.T) {
 				payload:   js,
 				once:      sync.Once{},
 			}, messages.Sent},
-			want: &messages.SimpleMessage{
+			want: &stream.SimpleMessage{
 				Payload: []byte{222, 222},
 			},
 			wantErr: false,
@@ -262,7 +263,7 @@ func TestTtnV3_TransformPahoJoinMessage(t1 *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *messages.SimpleMessage
+		want    *stream.SimpleMessage
 		wantErr bool
 	}{
 		// TODO: Add more/better test cases.
@@ -274,7 +275,7 @@ func TestTtnV3_TransformPahoJoinMessage(t1 *testing.T) {
 				payload:   js,
 				once:      sync.Once{},
 			}},
-			want: &messages.SimpleMessage{
+			want: &stream.SimpleMessage{
 				Payload: []byte{222, 222},
 			},
 			wantErr: false,
@@ -326,7 +327,7 @@ func TestTtnV3_TransformPahoUplinkMessage(t1 *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    *messages.SimpleMessage
+		want    *stream.SimpleMessage
 		wantErr bool
 	}{
 		// TODO: Add more/better test cases.
@@ -338,7 +339,7 @@ func TestTtnV3_TransformPahoUplinkMessage(t1 *testing.T) {
 				payload:   js,
 				once:      sync.Once{},
 			}},
-			want: &messages.SimpleMessage{
+			want: &stream.SimpleMessage{
 				Payload: []byte{222, 222},
 			},
 			wantErr: false,
