@@ -7,7 +7,7 @@ import (
 	"fmt"
 	paho "github.com/eclipse/paho.mqtt.golang"
 	"github.com/rs/zerolog/log"
-	"github.com/safecility/go/lib"
+	"github.com/safecility/go/lib/stream"
 	"github.com/safecility/go/mqtt/messages"
 	"time"
 )
@@ -40,7 +40,7 @@ func (t TtnV3) MqttTopic(deviceID string, channel messages.MqttChannel) string {
 	return fmt.Sprintf(`v3/%s@%s/devices/%s/%s`, t.AppID, "ttn", deviceID, channel)
 }
 
-func (t TtnV3) TransformPahoUplinkMessage(m paho.Message) (*messages.SimpleMessage, error) {
+func (t TtnV3) TransformPahoUplinkMessage(m paho.Message) (*messages.LoraMessage, error) {
 	uplink := &UplinkV3{}
 	err := json.Unmarshal(m.Payload(), uplink)
 	if err != nil {
@@ -70,7 +70,7 @@ func (t TtnV3) TransformPahoUplinkMessage(m paho.Message) (*messages.SimpleMessa
 		}
 	}
 
-	bd := lib.BrokerDevice{
+	bd := stream.BrokerDevice{
 		Source:    t.AppID,
 		DeviceUID: deviceID,
 	}
@@ -81,16 +81,20 @@ func (t TtnV3) TransformPahoUplinkMessage(m paho.Message) (*messages.SimpleMessa
 		Signal:    signal,
 	}
 
-	sm := &messages.SimpleMessage{
-		LoraData:     l,
+	sm := stream.SimpleMessage{
 		BrokerDevice: bd,
 		Payload:      payload,
 		Time:         uplink.Received,
 	}
-	return sm, nil
+
+	lm := &messages.LoraMessage{
+		l,
+		sm,
+	}
+	return lm, nil
 }
 
-func (t TtnV3) TransformPahoJoinMessage(m paho.Message) (*messages.SimpleMessage, error) {
+func (t TtnV3) TransformPahoJoinMessage(m paho.Message) (*messages.LoraMessage, error) {
 	join := &JoinV3{}
 	err := json.Unmarshal(m.Payload(), join)
 	if err != nil {
@@ -114,26 +118,31 @@ func (t TtnV3) TransformPahoJoinMessage(m paho.Message) (*messages.SimpleMessage
 		return nil, err
 	}
 
-	bd := lib.BrokerDevice{
+	bd := stream.BrokerDevice{
 		Source:    t.AppID,
 		DeviceUID: deviceID,
 	}
 
-	l := messages.LoraData{
+	ld := messages.LoraData{
 		DeviceEUI: deviceEUI,
 		Channel:   messages.Join,
 	}
 
-	sm := &messages.SimpleMessage{
-		LoraData:     l,
+	sm := stream.SimpleMessage{
 		BrokerDevice: bd,
 		Payload:      payload,
 		Time:         tm,
 	}
-	return sm, nil
+
+	lm := &messages.LoraMessage{
+		ld,
+		sm,
+	}
+
+	return lm, nil
 }
 
-func (t TtnV3) TransformPahoDownlinkMessage(m paho.Message, channel messages.MqttChannel) (*messages.SimpleMessage, error) {
+func (t TtnV3) TransformPahoDownlinkMessage(m paho.Message, channel messages.MqttChannel) (*messages.LoraMessage, error) {
 	downlink := &DownlinkV3{}
 	err := json.Unmarshal(m.Payload(), downlink)
 	if err != nil {
@@ -167,31 +176,35 @@ func (t TtnV3) TransformPahoDownlinkMessage(m paho.Message, channel messages.Mqt
 
 	tm := time.Now()
 
-	bd := lib.BrokerDevice{
+	bd := stream.BrokerDevice{
 		Source:    t.AppID,
 		DeviceUID: downlink.MessageIDs.DeviceID,
 	}
 
-	l := messages.LoraData{
+	ld := messages.LoraData{
 		DeviceEUI: deviceEUI,
 		Channel:   channel,
 	}
 
-	sm := &messages.SimpleMessage{
-		LoraData:     l,
+	sm := stream.SimpleMessage{
 		BrokerDevice: bd,
 		Payload:      payload,
 		Time:         tm,
 	}
-	return sm, nil
+
+	lm := &messages.LoraMessage{
+		ld,
+		sm,
+	}
+	return lm, nil
 }
 
-func (t TtnV3) CreateDownlink(message messages.SimpleMessage, correlationIDs []string) ([]byte, error) {
+func (t TtnV3) CreateDownlink(message stream.SimpleMessage, correlationIDs []string) ([]byte, error) {
 	dl := t.createV3Downlink(message, correlationIDs)
 	return json.Marshal(dl)
 }
 
-func (t TtnV3) createV3Downlink(message messages.SimpleMessage, correlationIDs []string) *DownlinksV3 {
+func (t TtnV3) createV3Downlink(message stream.SimpleMessage, correlationIDs []string) *DownlinksV3 {
 	encoded := base64.StdEncoding.EncodeToString(message.Payload)
 
 	return &DownlinksV3{Downlinks: []DownlinkV3Body{{

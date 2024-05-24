@@ -275,7 +275,7 @@ func (pp *PahoProxy) listenToGoogle() {
 
 	err := pp.downlinks.Receive(context.Background(), func(ctx context.Context, msg *pubsub.Message) {
 
-		var byteMessage messages.SimpleMessage
+		var byteMessage lib.SimpleMessage
 
 		if err := json.Unmarshal(msg.Data, &byteMessage); err != nil {
 			log.Err(fmt.Errorf("could not decode message data: %s", msg.Data)).Msg("decode err")

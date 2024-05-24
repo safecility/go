@@ -1,8 +1,7 @@
 package messages
 
 import (
-	"github.com/safecility/go/lib"
-	"time"
+	"github.com/safecility/go/lib/stream"
 )
 
 type MqttChannel string
@@ -31,9 +30,8 @@ type LoraData struct {
 	Channel   MqttChannel
 }
 
-type SimpleMessage struct {
+// LoraMessage - enhance our basic message with Lora specific fields
+type LoraMessage struct {
 	LoraData
-	lib.BrokerDevice
-	Payload []byte
-	Time    time.Time
+	stream.SimpleMessage
 }
