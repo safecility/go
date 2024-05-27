@@ -34,7 +34,7 @@ func PublishToTopic(m interface{}, topic *pubsub.Topic) (*string, error) {
 	return &result, nil
 }
 
-//GetDefaultSubscriptionConfig TODO fill in better defaults - make duration deployment dependant
+// GetDefaultSubscriptionConfig TODO fill in better defaults - make duration deployment dependant
 func GetDefaultSubscriptionConfig(topic *pubsub.Topic, retentionDuration time.Duration) pubsub.SubscriptionConfig {
 
 	return pubsub.SubscriptionConfig{
