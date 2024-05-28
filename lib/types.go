@@ -1,13 +1,16 @@
 package lib
 
+// Group our types use this slightly cumbersome naming convention for attributes to avoid erasure of values in datastore
+// and other mechanisms that flatten structures
 type Group struct {
-	ID       int64
-	ParentID int64
-	Children []Group
+	GroupID       int64
+	GroupParentID int64
+	GroupChildren []Group
 }
 
 type Device struct {
 	DeviceUID  string
 	DeviceName string
-	Group
+	CompanyID  int64
+	*Group
 }
