@@ -6,32 +6,103 @@ import (
 	"context"
 	"fmt"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/genproto/protobuf/field_mask"
 )
 
+type Secrets struct {
+	projectID string
+	client    *secretmanager.Client
+}
+
+// GetNewSecrets - fix all the weird things in google's api
+func GetNewSecrets(projectID string, client *secretmanager.Client) *Secrets {
+	return &Secrets{projectID: projectID, client: client}
+}
+
+func (s *Secrets) SetSecret(secretID string, payload []byte) (*secretmanagerpb.Secret, error) {
+	ctx := context.Background()
+
+	// Create the request to create the secret.
+	createSecretReq := &secretmanagerpb.CreateSecretRequest{
+		Parent:   fmt.Sprintf("projects/%s", s.projectID),
+		SecretId: secretID,
+		Secret: &secretmanagerpb.Secret{
+			Replication: &secretmanagerpb.Replication{
+				Replication: &secretmanagerpb.Replication_Automatic_{
+					Automatic: &secretmanagerpb.Replication_Automatic{},
+				},
+			},
+		},
+	}
+
+	secret, err := s.client.CreateSecret(ctx, createSecretReq)
+	if err != nil {
+		return nil, err
+	}
+
+	if payload != nil {
+		var version *secretmanagerpb.SecretVersion
+		version, err = s.AddSecretVersion(secretID, payload)
+		if version != nil {
+			log.Debug().Str("version", version.Name)
+		}
+	}
+
+	return secret, err
+}
+
+func (s *Secrets) AddSecretVersion(secretName string, newPayload []byte) (*secretmanagerpb.SecretVersion, error) {
+	// Build the request.
+	req := &secretmanagerpb.AddSecretVersionRequest{
+		Parent: fmt.Sprintf("projects/%s/secrets/%s", s.projectID, secretName),
+		Payload: &secretmanagerpb.SecretPayload{
+			Data: newPayload,
+		},
+	}
+
+	ctx := context.Background()
+	// Call the API.
+	return s.client.AddSecretVersion(ctx, req)
+}
+
 // GetSecret retrieve a secret with the given version name
-func GetSecret(versionName string) string {
+// version name must comply with naming convention - auto is 1, 2 etc
+func (s *Secrets) GetSecret(secret string, version uint16) (string, error) {
 	// Create the client.
 	ctx := context.Background()
-	client, err := secretmanager.NewClient(ctx)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to setup client")
-	}
-	defer func(client *secretmanager.Client) {
-		err := client.Close()
-		if err != nil {
-			log.Err(err).Msg("could not close client")
-		}
-	}(client)
 
 	// Build the request.
 	accessRequest := &secretmanagerpb.AccessSecretVersionRequest{
-		Name: versionName,
+		Name: fmt.Sprintf("projects/%s/secrets/%s/versions/%d", s.projectID, secret, version),
 	}
 
-	result, err := client.AccessSecretVersion(ctx, accessRequest)
+	result, err := s.client.AccessSecretVersion(ctx, accessRequest)
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not access secret")
+		return "", err
 	}
 
-	return fmt.Sprintf("%s", result.Payload.Data)
+	return fmt.Sprintf("%s", result), nil
+}
+
+func (s *Secrets) UpdateSecret(secretName string, version uint16, labels map[string]string) error {
+	// Build the request.
+	name := fmt.Sprintf("projects/%s/secrets/%s/versions/%d", s.projectID, secretName, version)
+	req := &secretmanagerpb.UpdateSecretRequest{
+		Secret: &secretmanagerpb.Secret{
+			Name:   name,
+			Labels: labels,
+		},
+		UpdateMask: &field_mask.FieldMask{
+			Paths: []string{"labels"},
+		},
+	}
+
+	ctx := context.Background()
+	// Call the API.
+	result, err := s.client.UpdateSecret(ctx, req)
+	if err != nil {
+		return fmt.Errorf("failed to update secret: %w", err)
+	}
+	log.Debug().Str("secret", result.Name).Msg("updated secret")
+	return nil
 }

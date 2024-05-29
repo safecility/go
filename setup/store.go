@@ -28,7 +28,7 @@ func (r *RedisConfig) NewClient() *redis.Client {
 
 type MySQLConfig struct {
 	//dont json in password
-	Password               string
+	Password               string `json:"-"`
 	Username               string `json:"user"`
 	Host                   string `json:"host"`
 	Port                   int    `json:"port"`
@@ -48,7 +48,7 @@ func (c MySQLConfig) connectionString(databaseName string) string {
 		cred = cred + "@"
 	}
 
-	//"%s:%s@unix(/%s/%s)/%s?parseTime=true"  dbUser, dbPwd, socketDir, instanceConnectionName, dbName
+	//TODO is there a reason not to use parseTime?
 	if c.InstanceConnectionName != "" {
 		socketDir, isSet := os.LookupEnv("DB_SOCKET_DIR")
 		if !isSet {
