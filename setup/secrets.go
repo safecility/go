@@ -65,9 +65,9 @@ func (s *Secrets) AddSecretVersion(secretName string, newPayload []byte) (*secre
 	return s.client.AddSecretVersion(ctx, req)
 }
 
-// GetSecret retrieve a secret with the given version name
-// version name must comply with naming convention - auto is 1, 2 etc
-func (s *Secrets) GetSecret(secret string, version uint16) (string, error) {
+// GetSecret retrieve a secret with the given version name.
+// The version name must comply with naming convention - auto is 1, 2 etc
+func (s *Secrets) GetSecret(secret string, version uint16) ([]byte, error) {
 	// Create the client.
 	ctx := context.Background()
 
@@ -78,10 +78,10 @@ func (s *Secrets) GetSecret(secret string, version uint16) (string, error) {
 
 	result, err := s.client.AccessSecretVersion(ctx, accessRequest)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return fmt.Sprintf("%s", result), nil
+	return result.Payload.Data, nil
 }
 
 func (s *Secrets) UpdateSecret(secretName string, version uint16, labels map[string]string) error {
