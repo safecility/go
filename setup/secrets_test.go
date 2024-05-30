@@ -194,9 +194,8 @@ func TestSecrets_UpdateSecret(t *testing.T) {
 		client *secretmanager.Client
 	}
 	type args struct {
-		secretName string
-		version    uint16
-		values     map[string]string
+		secret Secret
+		values map[string]string
 	}
 	tests := []struct {
 		name    string
@@ -211,7 +210,10 @@ func TestSecrets_UpdateSecret(t *testing.T) {
 			s := &Secrets{
 				client: tt.fields.client,
 			}
-			if err := s.UpdateSecret(tt.args.secretName, tt.args.version, tt.args.values); (err != nil) != tt.wantErr {
+			if err := s.UpdateSecret(Secret{
+				Name:    tt.args.secret.Name,
+				Version: tt.args.secret.Version,
+			}, tt.args.values); (err != nil) != tt.wantErr {
 				t.Errorf("UpdateSecret() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -243,8 +245,7 @@ func TestSecrets_GetSecret(t *testing.T) {
 		client    *secretmanager.Client
 	}
 	type args struct {
-		secret  string
-		version uint16
+		secret Secret
 	}
 	tests := []struct {
 		name    string
@@ -261,8 +262,7 @@ func TestSecrets_GetSecret(t *testing.T) {
 				client:    client,
 			},
 			args: args{
-				secret:  "testsecret",
-				version: 1,
+				secret: Secret{Name: "testsecret", Version: 1},
 			},
 			want:    []byte("testpayload"),
 			wantErr: false,
@@ -274,7 +274,7 @@ func TestSecrets_GetSecret(t *testing.T) {
 				projectID: tt.fields.projectID,
 				client:    tt.fields.client,
 			}
-			got, err := s.GetSecret(tt.args.secret, tt.args.version)
+			got, err := s.GetSecret(tt.args.secret)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetSecret() error = %v, wantErr %v", err, tt.wantErr)
 				return

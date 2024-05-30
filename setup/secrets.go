@@ -9,6 +9,11 @@ import (
 	"google.golang.org/genproto/protobuf/field_mask"
 )
 
+type Secret struct {
+	Name    string `json:"name"`
+	Version int    `json:"version"`
+}
+
 type Secrets struct {
 	projectID string
 	client    *secretmanager.Client
@@ -67,13 +72,13 @@ func (s *Secrets) AddSecretVersion(secretName string, newPayload []byte) (*secre
 
 // GetSecret retrieve a secret with the given version name.
 // The version name must comply with naming convention - auto is 1, 2 etc
-func (s *Secrets) GetSecret(secret string, version uint16) ([]byte, error) {
+func (s *Secrets) GetSecret(secret Secret) ([]byte, error) {
 	// Create the client.
 	ctx := context.Background()
 
 	// Build the request.
 	accessRequest := &secretmanagerpb.AccessSecretVersionRequest{
-		Name: fmt.Sprintf("projects/%s/secrets/%s/versions/%d", s.projectID, secret, version),
+		Name: fmt.Sprintf("projects/%s/secrets/%s/versions/%d", s.projectID, secret.Name, secret.Version),
 	}
 
 	result, err := s.client.AccessSecretVersion(ctx, accessRequest)
@@ -84,9 +89,9 @@ func (s *Secrets) GetSecret(secret string, version uint16) ([]byte, error) {
 	return result.Payload.Data, nil
 }
 
-func (s *Secrets) UpdateSecret(secretName string, version uint16, labels map[string]string) error {
+func (s *Secrets) UpdateSecret(secret Secret, labels map[string]string) error {
 	// Build the request.
-	name := fmt.Sprintf("projects/%s/secrets/%s/versions/%d", s.projectID, secretName, version)
+	name := fmt.Sprintf("projects/%s/secrets/%s/versions/%d", s.projectID, secret.Name, secret.Version)
 	req := &secretmanagerpb.UpdateSecretRequest{
 		Secret: &secretmanagerpb.Secret{
 			Name:   name,
