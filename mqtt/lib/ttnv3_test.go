@@ -147,7 +147,7 @@ func TestTtnV3_MqttTopic(t1 *testing.T) {
 	}
 	type args struct {
 		deviceID string
-		channel  messages.MqttChannel
+		channel  messages.MqttPath
 	}
 	tests := []struct {
 		name   string
@@ -183,7 +183,7 @@ func TestTtnV3_TransformPahoDownlinkMessage(t1 *testing.T) {
 	}
 	type args struct {
 		m       mqtt.Message
-		channel messages.MqttChannel
+		channel messages.MqttPath
 	}
 	pl := base64.StdEncoding.EncodeToString([]byte{222, 222})
 	mID := uint16(12)

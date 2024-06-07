@@ -1,22 +1,20 @@
 package messages
 
-import (
-	"github.com/safecility/go/lib/stream"
-)
+import "github.com/safecility/go/lib/stream"
 
-type MqttChannel string
+type MqttPath string
 
 const (
-	Join   MqttChannel = "join"
-	Uplink MqttChannel = "uplink"
-	Push   MqttChannel = "down/push"
-	Queued MqttChannel = "down/queued"
-	Ack    MqttChannel = "down/ack"
-	Nack   MqttChannel = "down/nack"
-	Sent   MqttChannel = "down/sent"
-	Failed MqttChannel = "down/failed"
+	Join   MqttPath = "join"
+	Uplink MqttPath = "uplink"
+	Queued MqttPath = "down/queued"
+	Ack    MqttPath = "down/ack"
+	Nack   MqttPath = "down/nack"
+	Sent   MqttPath = "down/sent"
+	Failed MqttPath = "down/failed"
 
 	AllDevices = "+"
+	//Push   MqttPath = "down/push"
 )
 
 type Signal struct {
@@ -24,14 +22,24 @@ type Signal struct {
 	Snr  float64
 }
 
-type LoraData struct {
-	DeviceEUI []byte
-	Signal    *Signal
-	Channel   MqttChannel
+type DeviceSignal struct {
+	DeviceUID string
+	Signal    Signal
 }
 
-// LoraMessage - enhance our basic message with Lora specific fields
+type Location struct {
+	Latitude  float64
+	Longitude float64
+	Altitude  float64
+}
+
+type DeviceLocation struct {
+	DeviceUID string
+	Location  Location
+}
+
 type LoraMessage struct {
-	LoraData
 	stream.SimpleMessage
+	Signal   *Signal
+	Location *Location
 }

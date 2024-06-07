@@ -14,12 +14,16 @@ import (
 )
 
 type GooglePubSub struct {
-	Joins            *pubsub.Topic
-	Uplinks          *pubsub.Topic
-	UplinkErrors     *pubsub.Topic
+	Joins        *pubsub.Topic
+	Uplinks      *pubsub.Topic
+	UplinkErrors *pubsub.Topic
+
 	Downlinks        *pubsub.Subscription
 	DownlinkReceipts *pubsub.Topic
 	DownlinkErrors   *pubsub.Topic
+
+	Location *pubsub.Topic
+	Signal   *pubsub.Topic
 }
 
 // MqttProxyConfig - for ttn the Username has the form: username = fmt.Sprintf("%s@ttn", p.AppID)
@@ -80,6 +84,8 @@ func NewPahoProxy(p MqttProxyConfig) (*PahoProxy, error) {
 		downlinks:        p.GooglePubSub.Downlinks,
 		transformer:      p.Transformer,
 		adjuster:         p.PayloadAdjuster,
+		location:         p.GooglePubSub.Location,
+		signal:           p.GooglePubSub.Signal,
 	}
 
 	return pp, nil
@@ -106,6 +112,9 @@ type PahoProxy struct {
 	downlinkReceipts *pubsub.Topic
 	downlinkErrors   *pubsub.Topic
 	downlinks        *pubsub.Subscription
+
+	location *pubsub.Topic
+	signal   *pubsub.Topic
 }
 
 // Run TODO make it so we can configure which channels to listen to and forward
@@ -184,37 +193,66 @@ func (pp *PahoProxy) initPubsub() error {
 
 func (pp *PahoProxy) listenAndPublishUplinks() {
 	for event := range pp.pahoUplinks {
-		sm, err := pp.transformer.TransformPahoUplinkMessage(event)
+		lm, err := pp.transformer.TransformPahoUplinkMessage(event)
+		event.Ack()
 		if err != nil {
 			log.Err(err).Msg("transformer err")
 		}
+
+		sm := &lm.SimpleMessage
+
 		if err := pp.adjuster.AdjustPayload(sm); err != nil {
 			log.Err(err).Msg("adjuster err")
 		}
-		event.Ack()
 
-		err = pp.publishUplink(sm)
+		_, err = stream.PublishToTopic(sm, pp.uplinks)
 		if err != nil {
-			log.Err(err).Msg("gPubSub err")
+			log.Error().Err(err).Msg("gPubSub err")
+			return
 		}
-		log.Debug().Str("id", sm.DeviceUID).Str("eui", fmt.Sprintf("%v", sm.DeviceEUI)).
-			Str("topic", pp.uplinks.String()).
-			Msg(fmt.Sprintf("published sm %+v", sm))
+		log.Debug().Str("id", sm.DeviceUID).Str("topic", pp.uplinks.String()).Msg("published uplink")
+
+		if pp.signal != nil {
+			ds := &messages.DeviceSignal{
+				DeviceUID: lm.DeviceUID,
+				Signal:    *lm.Signal,
+			}
+			_, err := stream.PublishToTopic(ds, pp.signal)
+			if err != nil {
+				log.Error().Err(err).Msg("could not publish signal")
+			}
+		}
+
+		if pp.location != nil {
+			ds := &messages.DeviceLocation{
+				DeviceUID: lm.DeviceUID,
+				Location:  *lm.Location,
+			}
+			_, err := stream.PublishToTopic(ds, pp.location)
+			if err != nil {
+				log.Error().Err(err).Msg("could not publish location")
+			}
+		}
 	}
 }
 
 func (pp *PahoProxy) listenAndPublishJoins() {
+	if pp.joins == nil {
+		log.Warn().Msg("no joins topic configured")
+		return
+	}
 	for event := range pp.pahoJoin {
 		sm, err := pp.transformer.TransformPahoJoinMessage(event)
+		event.Ack()
 		if err != nil {
 			log.Err(err).Msg("transformer join err")
 		}
-		err = pp.publishJoin(sm)
+		_, err = stream.PublishToTopic(sm, pp.uplinks)
 		if err != nil {
-			log.Err(err).Msg("gPubSub err")
+			log.Error().Err(err).Msg("publish failed")
+			return
 		}
 		log.Debug().Str("topic", pp.uplinks.String()).Msg("published uplink")
-		event.Ack()
 	}
 }
 
@@ -225,7 +263,12 @@ func (pp *PahoProxy) listenAndPublishUplinkErrors() {
 	}
 }
 
-func (pp *PahoProxy) listenAndPublishDownlinks(channel messages.MqttChannel) {
+func (pp *PahoProxy) listenAndPublishDownlinks(channel messages.MqttPath) {
+	if pp.downlinkReceipts == nil {
+		log.Warn().Msg("no topic for downlinkReceipts")
+		return
+	}
+
 	var downlinks <-chan paho.Message
 	switch channel {
 	case messages.Queued:
@@ -252,21 +295,18 @@ func (pp *PahoProxy) listenAndPublishDownlinks(channel messages.MqttChannel) {
 			Msg("downlink receipt")
 
 		sm, err := pp.transformer.TransformPahoDownlinkMessage(event, channel)
+		event.Ack()
+
 		if err != nil {
 			log.Err(err).Str("downlink", "err").Msg("transformer err")
 		}
 
-		if channel == messages.Ack {
-			log.Info().Str("downlink", "ack").Msg("event ack")
-		}
-
-		err = pp.publishDownlinkReceipt(sm)
+		_, err = stream.PublishToTopic(sm, pp.downlinkReceipts)
 		if err != nil {
 			log.Err(err).Msg("could not publish downlink receipt")
 		}
 		log.Debug().Str("channel", string(channel)).Str("pubsub", "google").
 			Msg("published downlink receipt")
-		event.Ack()
 	}
 }
 
@@ -315,25 +355,4 @@ func (pp *PahoProxy) listenToGoogle() {
 	if err != nil {
 		log.Err(err).Msg("google pubsub err")
 	}
-}
-
-func (pp *PahoProxy) publishUplink(message *messages.LoraMessage) error {
-	_, err := stream.PublishToTopic(message, pp.uplinks)
-	return err
-}
-
-func (pp *PahoProxy) publishJoin(message *messages.LoraMessage) error {
-	if pp.joins == nil {
-		log.Warn().Msg("no topic for joins")
-	}
-	_, err := stream.PublishToTopic(message, pp.joins)
-	return err
-}
-
-func (pp *PahoProxy) publishDownlinkReceipt(message *messages.LoraMessage) error {
-	if pp.downlinkReceipts == nil {
-		log.Warn().Msg("no topic for downlinkReceipts")
-	}
-	_, err := stream.PublishToTopic(message, pp.downlinkReceipts)
-	return err
 }

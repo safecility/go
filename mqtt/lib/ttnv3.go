@@ -36,7 +36,7 @@ func (t TtnV3) GetDownlinkTopicPush(devID string) string {
 func (t TtnV3) GetDownlinkTopicReplace(devID string) string {
 	return fmt.Sprintf("v3/%s@%s/devices/%s/down/replace", t.AppID, "ttn", devID)
 }
-func (t TtnV3) MqttTopic(deviceID string, channel messages.MqttChannel) string {
+func (t TtnV3) MqttTopic(deviceID string, channel messages.MqttPath) string {
 	return fmt.Sprintf(`v3/%s@%s/devices/%s/%s`, t.AppID, "ttn", deviceID, channel)
 }
 
@@ -75,26 +75,16 @@ func (t TtnV3) TransformPahoUplinkMessage(m paho.Message) (*messages.LoraMessage
 		DeviceUID: deviceID,
 	}
 
-	l := messages.LoraData{
-		DeviceEUI: deviceEUI,
-		Channel:   messages.Uplink,
-		Signal:    signal,
-	}
-
-	sm := stream.SimpleMessage{
+	sm := &stream.SimpleMessage{
 		BrokerDevice: bd,
 		Payload:      payload,
 		Time:         uplink.Received,
 	}
 
-	lm := &messages.LoraMessage{
-		l,
-		sm,
-	}
-	return lm, nil
+	return sm, nil
 }
 
-func (t TtnV3) TransformPahoJoinMessage(m paho.Message) (*messages.LoraMessage, error) {
+func (t TtnV3) TransformPahoJoinMessage(m paho.Message) (*stream.SimpleMessage, error) {
 	join := &JoinV3{}
 	err := json.Unmarshal(m.Payload(), join)
 	if err != nil {
@@ -125,7 +115,7 @@ func (t TtnV3) TransformPahoJoinMessage(m paho.Message) (*messages.LoraMessage, 
 
 	ld := messages.LoraData{
 		DeviceEUI: deviceEUI,
-		Channel:   messages.Join,
+		Path:      messages.Join,
 	}
 
 	sm := stream.SimpleMessage{
@@ -142,7 +132,7 @@ func (t TtnV3) TransformPahoJoinMessage(m paho.Message) (*messages.LoraMessage, 
 	return lm, nil
 }
 
-func (t TtnV3) TransformPahoDownlinkMessage(m paho.Message, channel messages.MqttChannel) (*messages.LoraMessage, error) {
+func (t TtnV3) TransformPahoDownlinkMessage(m paho.Message, path messages.MqttPath) (*messages.LoraMessage, error) {
 	downlink := &DownlinkV3{}
 	err := json.Unmarshal(m.Payload(), downlink)
 	if err != nil {
@@ -151,7 +141,7 @@ func (t TtnV3) TransformPahoDownlinkMessage(m paho.Message, channel messages.Mqt
 	log.Debug().Str("payload", fmt.Sprintf("%s", m.Payload())).Msg("downlink")
 	var p = ""
 
-	switch channel {
+	switch path {
 	case messages.Queued:
 		p = downlink.DownlinkQueued.Payload
 		break
@@ -183,7 +173,7 @@ func (t TtnV3) TransformPahoDownlinkMessage(m paho.Message, channel messages.Mqt
 
 	ld := messages.LoraData{
 		DeviceEUI: deviceEUI,
-		Channel:   channel,
+		Path:      path,
 	}
 
 	sm := stream.SimpleMessage{
