@@ -39,7 +39,7 @@ func (t TtnV3) MqttTopic(deviceID string, channel messages.MqttPath) string {
 	return fmt.Sprintf(`v3/%s@%s/devices/%s/%s`, t.AppID, "ttn", deviceID, channel)
 }
 
-func (t TtnV3) TransformPahoUplinkMessage(m paho.Message) (*messages.LoraMessage, error) {
+func (t TtnV3) TransformPahoUplinkMessage(m paho.Message) (*stream.SimpleMessage, error) {
 	uplink := &UplinkV3{}
 	err := json.Unmarshal(m.Payload(), uplink)
 	if err != nil {
