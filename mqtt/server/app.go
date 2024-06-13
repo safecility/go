@@ -204,6 +204,7 @@ func (pp *PahoProxy) listenAndPublishUplinks() {
 		if err := pp.adjuster.AdjustPayload(sm); err != nil {
 			log.Err(err).Msg("adjuster err")
 		}
+		sm.Source = pp.appID
 
 		_, err = stream.PublishToTopic(sm, pp.uplinks)
 		if err != nil {

@@ -45,8 +45,7 @@ func (t TtnV3) TransformPahoUplinkMessage(m paho.Message) (*messages.LoraMessage
 	if err != nil {
 		return nil, err
 	}
-	log.Debug().Str("decode", fmt.Sprintf("%s", m.Payload())).
-		Str("uplink", fmt.Sprintf("%+v", uplink)).Msg("payload")
+	log.Debug().Str("payload", uplink.Message.Payload).Msg("decoded uplink")
 
 	deviceID := uplink.MessageIDs.DeviceID
 	if t.UidTransformer != nil {
