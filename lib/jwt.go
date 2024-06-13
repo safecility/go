@@ -42,6 +42,9 @@ func (p *JWTParser) ParseToken(tokenString string) (*jwt.MapClaims, error) {
 		if expiredErr != nil {
 			return nil, expiredErr
 		}
+		if t == nil {
+			return &claims, fmt.Errorf("no expiration time found")
+		}
 		if t.Time.Before(time.Now()) {
 			return nil, fmt.Errorf("token expired")
 		}

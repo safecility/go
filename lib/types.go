@@ -4,9 +4,9 @@ package lib
 // a devices message typically identifies itself with a UID
 // the Meta information can then be accessed and added to the struct
 type Device struct {
-	DeviceUID string
-	*DeviceMeta
-	*Group
+	DeviceUID   string
+	*DeviceMeta `datastore:",omitempty"`
+	*Group      `datastore:",omitempty"`
 }
 
 // DeviceMeta helps further identify a Device.
@@ -25,12 +25,12 @@ type DeviceMeta struct {
 // processing pipeline
 // our types use this slightly cumbersome naming convention for attributes to avoid erasure of values in datastore
 // and other mechanisms that flatten structures
-// a Group always has a GroupUID and belongs to a Company - if the group is a top level group then the GroupParentUID is
+// a Group always has a GroupUID and belongs to a Company - if the group is a top level group then the ParentUID is
 // the same as the CompanyUID or empty - group structures do not need to represent all or any of their children but may
 // choose to do so (children may instead name their ParentUID and associate in this way instead)
 type Group struct {
-	GroupUID       string
-	GroupParentUID string
-	GroupChildren  []Group
-	CompanyUID     string
+	GroupUID   string `datastore:",omitempty"`
+	CompanyUID string `datastore:",omitempty"`
+	ParentUID  string `datastore:",omitempty"`
+	Children   []Group
 }
