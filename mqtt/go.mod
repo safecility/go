@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/pubsub v1.38.0
 	github.com/eclipse/paho.mqtt.golang v1.4.3
 	github.com/rs/zerolog v1.33.0
-	github.com/safecility/go/lib v0.0.0-20240524135436-0d90fc63b793
+	github.com/safecility/go/lib v0.0.0-20240613143005-63ac091e0b72
 	google.golang.org/grpc v1.64.0
 )
 
@@ -19,6 +19,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
