@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 	"time"
 )
 
@@ -27,6 +29,37 @@ func PublishToTopic(m interface{}, topic *pubsub.Topic) (*string, error) {
 	}
 
 	result, err := topic.Publish(ctx, message).Get(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not publish json to topic %v: %v", topic, err)
+	}
+
+	return &result, nil
+}
+
+func PublishProtoToTopic(m proto.Message, encoding pubsub.SchemaEncoding, topic *pubsub.Topic) (*string, error) {
+	var msg []byte
+	var err error
+
+	switch encoding {
+	case pubsub.EncodingBinary:
+		msg, err = proto.Marshal(m)
+		if err != nil {
+			return nil, fmt.Errorf("proto.Marshal err: %v", err)
+		}
+	case pubsub.EncodingJSON:
+		msg, err = protojson.Marshal(m)
+		if err != nil {
+			return nil, fmt.Errorf("protojson.Marshal err: %v", err)
+		}
+	default:
+		return nil, fmt.Errorf("invalid encoding: %v", encoding)
+	}
+
+	ctx := context.Background()
+	result, err := topic.Publish(ctx, &pubsub.Message{
+		Data: msg,
+	}).Get(ctx)
+
 	if err != nil {
 		return nil, fmt.Errorf("could not publish json to topic %v: %v", topic, err)
 	}
