@@ -7,7 +7,7 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/redis/go-redis/v9 v9.5.3
 	github.com/rs/zerolog v1.33.0
-	google.golang.org/genproto v0.0.0-20240617180043-68d350f18fd4
+	google.golang.org/genproto v0.0.0-20240401170217-c3f982113cda
 )
 
 require (
