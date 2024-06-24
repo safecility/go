@@ -45,8 +45,8 @@ type QueryServer struct {
 type UsageBucket struct {
 	//DeviceUID, min as initial_reading, max as final_reading, (max - min) as kWh, readings, first_reading, last_reading, bucket
 	DeviceUID    string
-	Min          float64   `datastore:",omitempty"`
 	Max          float64   `datastore:",omitempty"`
+	Min          float64   `datastore:",omitempty"`
 	Usage        float64   `datastore:",omitempty"`
 	Readings     int       `datastore:",omitempty"`
 	FirstReading time.Time `datastore:",omitempty"`
@@ -73,18 +73,25 @@ func (dus QueryServer) readRow(r []bigquery.Value) (*UsageBucket, error) {
 		Min:          r[2].(float64),
 		Usage:        r[3].(float64),
 		Readings:     int(r[4].(int64)),
-		FirstReading: r[5].(time.Time),
-		LastReading:  r[6].(time.Time),
+		LastReading:  r[5].(time.Time),
+		FirstReading: r[6].(time.Time),
 		Bucket: Bucket{
 			StartTime: r[7].(time.Time),
 		},
+	}
+	if ub.Max == 0 || ub.Min > ub.Max {
+		log.Warn().Str("row", fmt.Sprintf("%+v", r)).Str("usage", fmt.Sprintf("%+v", ub)).Msg("max is too small")
+	}
+	if ub.Min == 0 {
+		log.Info().Msg("min reading is zero - check device is new")
 	}
 
 	return ub, nil
 }
 
-// RunQuery issue a query and show results.
-func (dus QueryServer) RunQuery(bucket BucketType, interval *QueryInterval) ([]UsageBucket, error) {
+// RunPowerUsageQuery pass the required BucketType and QueryInterval, the query uses TIMESTAMP_BUCKET and finds max and min
+// values within the buckets
+func (dus QueryServer) RunPowerUsageQuery(bucket BucketType, interval *QueryInterval) ([]UsageBucket, error) {
 	ctx := context.Background()
 
 	//the FullID replacement is because of really terrible coding by google
@@ -94,8 +101,8 @@ func (dus QueryServer) RunQuery(bucket BucketType, interval *QueryInterval) ([]U
 	}
 	//very hard to get goland not to interpret this as sql hence the "SELECT " +
 	query := "SELECT " +
-		`DeviceUID, min as initial_reading, max as final_reading, (max - min) as kWh, readings, first_reading, last_reading, bucket from (` +
-		fmt.Sprintf(`SELECT DeviceUID, Max(ReadingKWH) as max, Min(ReadingKWH) as min, Min(Time) as first_reading, Max(Time) as last_reading, count(*) as readings, 
+		`DeviceUID, max, min, (max - min) as kWh, readings, first_reading, last_reading, bucket FROM (` +
+		fmt.Sprintf(`SELECT DeviceUID, Max(ReadingKWH) as max, Min(ReadingKWH) as min, Max(Time) as last_reading, Min(Time) as first_reading, count(*) as readings, 
 							TIMESTAMP_BUCKET(Time, INTERVAL %d %s) AS bucket %s GROUP BY DeviceUID, bucket`, bucket.Multiplier, bucket.Interval, from) +
 		") ORDER BY DeviceUID, bucket;"
 
