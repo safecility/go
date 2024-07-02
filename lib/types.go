@@ -6,31 +6,58 @@ package lib
 type Device struct {
 	DeviceUID   string
 	*DeviceMeta `datastore:",omitempty"`
-	*Group      `datastore:",omitempty"`
 }
 
 // DeviceMeta helps further identify a Device.
-// Deployed devices typically have an UID that identifies the physical unit.
-// DeviceName is a human readable identifier for the device which may or may not be unique
-// DeviceTag identifies the function of the device in its environment and should remain constant is the device is
-// switched out
-// due to failure or replacement but the function of the device remains constant: so for example the cooler in room 4B is still
-// the cooler in 4B even if it is upgraded from PhilipsKA4500 to PhilipsKA4501
+// Deployed devices *must* have an UID that identifies the physical unit.
+// The metadata can be added to passed messages so a cache is not needed to query the structure needed for microservice
+//
+// DeviceName is a human-readable identifier for the device which may or may not be unique
+// DeviceTag identifies the function of the device in its environment and should remain constant if the device is
+// switched out due to failure or replacement but the function of the device remains constant
+//
+// so for example:
+//
+//	the cooler in room 4B is still the cooler in 4B even if it is upgraded from PhilipsKA4500 to PhilipsKA4501
+//
+// CompanyUID and LocationUID are optional structure data that can be used by microservice to store and process data
+// without needing to access the device cache
+
 type DeviceMeta struct {
-	DeviceName string
-	DeviceTag  string
+	DeviceName  string `datastore:",omitempty"`
+	DeviceTag   string `datastore:",omitempty"`
+	CompanyUID  string `datastore:",omitempty"`
+	LocationUID string `datastore:",omitempty"`
 }
 
-// Group provides Devices with a basic organizational system that can be easily cached and added as metadata early in a
-// processing pipeline
-// our types use this slightly cumbersome naming convention for attributes to avoid erasure of values in datastore
-// and other mechanisms that flatten structures
-// a Group always has a GroupUID and belongs to a Company - if the group is a top level group then the ParentUID is
-// the same as the CompanyUID or empty - group structures do not need to represent all or any of their children but may
-// choose to do so (children may instead name their ParentUID and associate in this way instead)
+// Group provides a basic organizational system that can be added as metadata in a processing pipeline
+//
+// a Group always has a GroupUID and a GroupType, groups can be flat or, if a groupParent is present, hierarchical
 type Group struct {
-	GroupUID   string `datastore:",omitempty"`
-	CompanyUID string `datastore:",omitempty"`
-	ParentUID  string `datastore:",omitempty"`
-	Children   []Group
+	GroupUID    string
+	GroupType   string
+	GroupParent *Group `datastore:",omitempty"`
 }
+
+// DeviceSkeleton is used by microservices before they have full admin details for a device - this allows a device's data
+// to be stored and traced even if it is not currently identified in admin.
+type DeviceSkeleton struct {
+	DeviceUID      string
+	DeviceCategory Category
+	ServiceUID     string
+}
+
+type DeviceType string
+type DeviceGroup string
+
+type Category struct {
+	DeviceType
+	DeviceGroup
+}
+
+const (
+	Power    DeviceType  = "power"
+	Lighting DeviceType  = "lighting"
+	Meter    DeviceGroup = "meter"
+	DaliEL   DeviceGroup = "daliEL"
+)
