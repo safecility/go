@@ -24,6 +24,10 @@ func GetNewSecrets(projectID string, client *secretmanager.Client) *Secrets {
 	return &Secrets{projectID: projectID, client: client}
 }
 
+func (s *Secrets) Close() error {
+	return s.client.Close()
+}
+
 func (s *Secrets) SetSecret(secretID string, payload []byte) (*secretmanagerpb.Secret, error) {
 	ctx := context.Background()
 

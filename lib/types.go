@@ -5,8 +5,8 @@ package lib
 // the Meta information can then be accessed and added to the struct as well as Groups, an open array of structural helpers
 type Device struct {
 	DeviceUID   string
-	*DeviceMeta `datastore:",omitempty" firestore:",omitempty"`
-	Groups      []Group `datastore:",omitempty" firestore:",omitempty"`
+	*DeviceMeta `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
+	Groups      []Group `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
 }
 
 // DeviceMeta helps further identify a Device.
@@ -25,30 +25,30 @@ type Device struct {
 // without needing to access the device cache
 
 type DeviceMeta struct {
-	DeviceName string         `datastore:",omitempty" firestore:",omitempty"`
-	DeviceTag  string         `datastore:",omitempty" firestore:",omitempty"`
-	DeviceType DeviceType     `datastore:",omitempty" firestore:",omitempty"`
-	Listing    *Listing       `datastore:",omitempty" firestore:",omitempty"`
-	Version    *DeviceVersion `datastore:",omitempty" firestore:",omitempty"`
+	DeviceName string         `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
+	DeviceTag  string         `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
+	DeviceType DeviceType     `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
+	Listing    *Listing       `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
+	Version    *DeviceVersion `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
 }
 
 type Listing struct {
-	CompanyUID  string `datastore:",omitempty" firestore:",omitempty"`
-	LocationUID string `datastore:",omitempty" firestore:",omitempty"`
+	CompanyUID  string `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
+	LocationUID string `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
 }
 
 type DeviceVersion struct {
-	FirmwareName    string `datastore:",omitempty" firestore:",omitempty"`
-	FirmwareVersion string `datastore:",omitempty" firestore:",omitempty"`
+	FirmwareName    string `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
+	FirmwareVersion string `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
 }
 
 // Group provides a basic organizational system that can be added as metadata in a processing pipeline
-//
-// a Group always has a GroupUID and a GroupType, groups can be flat or, if a groupParentUID is present, hierarchical
+// a Group always has a GroupUID and a GroupType:
+// groups can be flat or, if a groupParentUID is present, hierarchical
 type Group struct {
 	GroupUID       string
 	GroupType      string
-	GroupParentUID string `datastore:",omitempty" firestore:",omitempty"`
+	GroupParentUID string `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
 }
 
 // DeviceSkeleton is used by microservices before they have full admin details for a device - this allows a device's data

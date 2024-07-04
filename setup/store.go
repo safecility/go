@@ -1,6 +1,7 @@
 package setup
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"github.com/go-sql-driver/mysql"
@@ -10,20 +11,25 @@ import (
 )
 
 type RedisConfig struct {
-	Host string `json:"host"`
-	Port string `json:"port"`
-	Key  string `json:"key"`
+	Host   string  `json:"host"`
+	Port   int     `json:"port"`
+	Secret *Secret `json:"secret"`
+	Key    []byte  `json:"-"`
 }
 
 func (r *RedisConfig) Address() string {
 	return fmt.Sprintf("%s:%s", r.Host, r.Port)
 }
-func (r *RedisConfig) NewClient() *redis.Client {
-	return redis.NewClient(&redis.Options{
+
+func (r *RedisConfig) NewClient() (*redis.Client, error) {
+	rClient := redis.NewClient(&redis.Options{
 		Addr:     r.Address(),
-		Password: r.Key,
+		Password: string(r.Key),
 		DB:       0, // use default DB
 	})
+	sc := rClient.Ping(context.Background())
+
+	return rClient, sc.Err()
 }
 
 type MySQLConfig struct {
