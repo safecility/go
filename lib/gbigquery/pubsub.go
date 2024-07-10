@@ -23,9 +23,32 @@ func CreateProtoSchema(client *pubsub.SchemaClient, schemaID, protoFile string) 
 	ctx := context.Background()
 	s, err := client.CreateSchema(ctx, schemaID, config)
 	if err != nil {
-		return nil, fmt.Errorf("CreateSchema: %w", err)
+		return nil, err
 	}
 	log.Debug().Str("schema", s.Name).Msg("Schema created")
+	return s, nil
+}
+
+// UpdateProtoSchema creates a schema resource from a schema proto file.
+func UpdateProtoSchema(client *pubsub.SchemaClient, name, revisionID, protoFile string) (*pubsub.SchemaConfig, error) {
+	protoSource, err := os.ReadFile(protoFile)
+	if err != nil {
+		return nil, fmt.Errorf("error reading from file: %s", protoFile)
+	}
+
+	config := pubsub.SchemaConfig{
+		Type:       pubsub.SchemaProtocolBuffer,
+		Definition: string(protoSource),
+		Name:       name,
+		RevisionID: revisionID,
+	}
+
+	ctx := context.Background()
+	s, err := client.CommitSchema(ctx, name, config)
+	if err != nil {
+		return nil, err
+	}
+	log.Debug().Str("schema", s.Name).Msg("Schema revision created")
 	return s, nil
 }
 
