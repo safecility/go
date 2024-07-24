@@ -33,7 +33,7 @@ func (r *RedisConfig) NewClient() (*redis.Client, error) {
 }
 
 type MySQLConfig struct {
-	//dont json in password
+	//don't json in password
 	Password               string `json:"-"`
 	Username               string `json:"user"`
 	Host                   string `json:"host"`
