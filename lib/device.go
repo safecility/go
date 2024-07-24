@@ -21,8 +21,7 @@ type Device struct {
 //
 //	the cooler in room 4B is still the cooler in 4B even if it is upgraded from PhilipsKA4500 to PhilipsKA4501
 //
-// CompanyUID and LocationUID are a basic organizational elements - we leave these for convenience at the top level
-// instead of contained within Listing
+// CompanyUID and LocationUID remain as basic organizational elements
 type DeviceMeta struct {
 	DeviceName string     `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
 	DeviceTag  string     `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
@@ -31,18 +30,12 @@ type DeviceMeta struct {
 	CompanyUID  string `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
 	LocationUID string `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
 
-	Listing *Listing       `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
-	Version *DeviceVersion `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
+	Version    *DeviceVersion `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
+	Processors *Processor     `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
 }
 
-// Listing is an additional organizational element for common arrangements of devices, this is not exhaustive and it
-// assumes pipelines will add additional structural processing either by extending their Device representation
-type Listing struct {
-	SystemUID string `datastore:",omitempty" firestore:",omitempty"  json:",omitempty"`
-	TenantUID string `datastore:",omitempty" firestore:",omitempty"  json:",omitempty"`
-	GroupUID  string `datastore:",omitempty" firestore:",omitempty"  json:",omitempty"`
-	Owner     string `datastore:",omitempty" firestore:",omitempty"  json:",omitempty"`
-}
+// Processor allows implementations to save a number of identifiers for different processing options
+type Processor map[string]interface{}
 
 type DeviceVersion struct {
 	FirmwareName    string `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
