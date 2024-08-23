@@ -4,7 +4,7 @@ package lib
 // a devices message typically identifies itself with a UID
 // the Meta information can then be accessed and added to the struct as well as Groups, an open array of structural helpers
 type Device struct {
-	DeviceUID   string `firestore:"deviceUID," json:"deviceUID,"`
+	DeviceUID   string `firestore:"uid" json:"uid"`
 	*DeviceMeta `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
 }
 
@@ -25,19 +25,19 @@ type Device struct {
 type DeviceMeta struct {
 	DeviceName string     `datastore:",omitempty" firestore:"name,omitempty" json:"deviceName,omitempty"`
 	DeviceTag  string     `datastore:",omitempty" firestore:"tag,omitempty" json:"deviceTag,omitempty"`
-	DeviceType DeviceType `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
+	DeviceType DeviceType `datastore:",omitempty" firestore:"type,omitempty" json:"type,omitempty"`
 
 	CompanyUID  string `datastore:",omitempty" firestore:"companyUID,omitempty" json:"companyUID,omitempty"`
 	LocationUID string `datastore:",omitempty" firestore:"locationUID,omitempty" json:"locationUID,omitempty"`
 
-	Version    *DeviceVersion `datastore:",omitempty" firestore:"deviceVersion,omitempty" json:"deviceVersion,omitempty"`
-	Processors *Processor     `datastore:",omitempty" firestore:"processors,omitempty" json:"processors,omitempty"`
+	Firmware   *Firmware  `datastore:",omitempty" firestore:"firmware,omitempty" json:"firmware,omitempty"`
+	Processors *Processor `datastore:",omitempty" firestore:"processors,omitempty" json:"processors,omitempty"`
 }
 
 // Processor allows implementations to save a number of identifiers for different processing options
 type Processor map[string]interface{}
 
-type DeviceVersion struct {
+type Firmware struct {
 	FirmwareName    string `datastore:",omitempty" firestore:"name,omitempty" json:"name,omitempty"`
 	FirmwareVersion string `datastore:",omitempty" firestore:"version,omitempty" json:"version,omitempty"`
 }
