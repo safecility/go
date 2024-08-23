@@ -4,7 +4,7 @@ package lib
 // a devices message typically identifies itself with a UID
 // the Meta information can then be accessed and added to the struct as well as Groups, an open array of structural helpers
 type Device struct {
-	DeviceUID   string
+	DeviceUID   string `firestore:"deviceUID," json:"deviceUID,"`
 	*DeviceMeta `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
 }
 
@@ -23,23 +23,23 @@ type Device struct {
 //
 // CompanyUID and LocationUID remain as basic organizational elements
 type DeviceMeta struct {
-	DeviceName string     `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
-	DeviceTag  string     `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
+	DeviceName string     `datastore:",omitempty" firestore:"name,omitempty" json:"deviceName,omitempty"`
+	DeviceTag  string     `datastore:",omitempty" firestore:"tag,omitempty" json:"deviceTag,omitempty"`
 	DeviceType DeviceType `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
 
-	CompanyUID  string `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
-	LocationUID string `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
+	CompanyUID  string `datastore:",omitempty" firestore:"companyUID,omitempty" json:"companyUID,omitempty"`
+	LocationUID string `datastore:",omitempty" firestore:"locationUID,omitempty" json:"locationUID,omitempty"`
 
-	Version    *DeviceVersion `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
-	Processors *Processor     `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
+	Version    *DeviceVersion `datastore:",omitempty" firestore:"deviceVersion,omitempty" json:"deviceVersion,omitempty"`
+	Processors *Processor     `datastore:",omitempty" firestore:"processors,omitempty" json:"processors,omitempty"`
 }
 
 // Processor allows implementations to save a number of identifiers for different processing options
 type Processor map[string]interface{}
 
 type DeviceVersion struct {
-	FirmwareName    string `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
-	FirmwareVersion string `datastore:",omitempty" firestore:",omitempty" json:",omitempty"`
+	FirmwareName    string `datastore:",omitempty" firestore:"name,omitempty" json:"name,omitempty"`
+	FirmwareVersion string `datastore:",omitempty" firestore:"version,omitempty" json:"version,omitempty"`
 }
 
 // DeviceSkeleton is used by microservices before they have full admin details for a device - this allows a device's data
