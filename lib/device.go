@@ -30,8 +30,9 @@ type DeviceMeta struct {
 	CompanyUID  string `datastore:",omitempty" firestore:"companyUID,omitempty" json:"companyUID,omitempty"`
 	LocationUID string `datastore:",omitempty" firestore:"locationUID,omitempty" json:"locationUID,omitempty"`
 
-	Firmware   *Firmware  `datastore:",omitempty" firestore:"firmware,omitempty" json:"firmware,omitempty"`
-	Processors *Processor `datastore:",omitempty" firestore:"processors,omitempty" json:"processors,omitempty"`
+	Firmware *Firmware `datastore:",omitempty" firestore:"firmware,omitempty" json:"firmware,omitempty"`
+	//Datastore can't handle map[string]interface so a datastore implementation will need to serialize the specific processors it needs
+	Processors *Processor `datastore:"-" firestore:"processors,omitempty" json:"processors,omitempty"`
 }
 
 // Processor allows implementations to save a number of identifiers for different processing options
