@@ -1,6 +1,6 @@
 module github.com/safecility/go/setup
 
-go 1.22
+go 1.23
 
 require (
 	cloud.google.com/go/secretmanager v1.14.3

@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// JWTParser: We use JWT primarily in conjunction with external Webhooks
 type JWTParser struct {
 	hmacSecret []byte
 }
