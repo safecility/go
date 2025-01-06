@@ -7,8 +7,9 @@ import (
 	"os"
 )
 
-// GetConfig creates a config for the specified deployment
-func GetConfig(deployment string, config *any) error {
+// GetConfig creates a config for the specified deployment from a local file of form "***-config.json"
+// the json file is decoded into the supplied struct (each service will provide its own config struct)
+func GetConfig(deployment string, config any) error {
 	fileName := fmt.Sprintf("%s-config.json", deployment)
 
 	file, err := os.Open(fileName)

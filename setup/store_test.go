@@ -73,8 +73,8 @@ func TestNewSafecilitySql(t *testing.T) {
 func TestRedisConfig_Address(t *testing.T) {
 	type fields struct {
 		Host string
-		Port string
-		Key  string
+		Port int
+		Key  []byte
 	}
 	tests := []struct {
 		name   string
@@ -100,8 +100,8 @@ func TestRedisConfig_Address(t *testing.T) {
 func TestRedisConfig_NewClient(t *testing.T) {
 	type fields struct {
 		Host string
-		Port string
-		Key  string
+		Port int
+		Key  []byte
 	}
 	tests := []struct {
 		name   string
@@ -117,7 +117,7 @@ func TestRedisConfig_NewClient(t *testing.T) {
 				Port: tt.fields.Port,
 				Key:  tt.fields.Key,
 			}
-			if got := r.NewClient(); !reflect.DeepEqual(got, tt.want) {
+			if got, _ := r.NewClient(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewClient() = %v, want %v", got, tt.want)
 			}
 		})

@@ -1,0 +1,11 @@
+{
+  "test": {
+    "name": "a test",
+    "array": ["a", "test", "from", "local"],
+    "object": {
+      "name": "sub object",
+      "position": 1,
+      "value": 2.0
+    }
+  }
+}

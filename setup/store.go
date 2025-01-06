@@ -18,7 +18,7 @@ type RedisConfig struct {
 }
 
 func (r *RedisConfig) Address() string {
-	return fmt.Sprintf("%s:%s", r.Host, r.Port)
+	return fmt.Sprintf("%s:%d", r.Host, r.Port)
 }
 
 func (r *RedisConfig) NewClient() (*redis.Client, error) {
